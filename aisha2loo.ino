@@ -6,7 +6,9 @@
 #include "LooMotion.h"
 #include "PushButton.h"
 
-
+/** The code herein written by the Author is released under the terms of the unlicense. https://unlicense.org/
+ * @author https://github.com/lexfp 
+ */
 //time server
 const char* ntpServer = "pool.ntp.org";
 

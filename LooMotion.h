@@ -1,5 +1,8 @@
 #include <vector>
 
+/** The code herein written by the Author is released under the terms of the unlicense. https://unlicense.org/
+ * @author https://github.com/lexfp 
+ */
 class LooMotion
 {
   private:

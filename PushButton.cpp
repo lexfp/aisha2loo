@@ -1,6 +1,9 @@
 #include "PushButton.h"
 #include <WiFi.h>
 
+/** The code herein written by the Author is released under the terms of the unlicense. https://unlicense.org/
+ * @author https://github.com/lexfp 
+ */
 void PushButton::init(int pin) {
   pushButtonPin = pin;
   pinMode(pushButtonPin, INPUT_PULLUP);
