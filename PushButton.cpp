@@ -4,6 +4,7 @@
 /** The code herein written by the Author is released under the terms of the unlicense. https://unlicense.org/
  * @author https://github.com/lexfp 
  */
+
 void PushButton::init(int pin) {
   pushButtonPin = pin;
   pinMode(pushButtonPin, INPUT_PULLUP);
@@ -20,7 +21,7 @@ bool PushButton::checkForClick() {
     if (buttonDown == 0) {
       if (differenceTimeStamp > buttonClickTime)
       {
-        Serial.println("Button Down");  
+        //Serial.println("Button Down");  
         buttonDown = 1;
         lastTimeStamp = esp_log_timestamp();
         return 1;

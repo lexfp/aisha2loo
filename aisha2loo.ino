@@ -2,9 +2,12 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <vector>
-#include <esp8266-google-home-notifier.h>
 #include "LooMotion.h"
 #include "PushButton.h"
+#include "SPIFFS.h"
+#include "GoogleHome.h"
+
+
 
 /** The code herein written by the Author is released under the terms of the unlicense. https://unlicense.org/
  * @author https://github.com/lexfp 
@@ -13,15 +16,24 @@
 const char* ntpServer = "pool.ntp.org";
 
 /** push button for testing/development only - not required*/
-const int pushButtonPin = 15;
+//const int pushButtonPin = 15; 
+const int pushButtonPin = 0; //use 0 for boot button (no extra wiring)
 PushButton pushButton;
+GoogleHome googleHome;
 
-GoogleHomeNotifier ghn;
-const char googleHomeName[] = "Living Room speaker";
+String thisURL = "http://";
+
 
 // Replace with your network credentials
 const char* ssid = "YOUR_SSID";
 const char* password = "YOUR_NETWORK_PASSWORD";
+
+char googleHomeName[] = "Living Room speaker";
+
+String alertMP3[4] = { "/bathroomalert.mp3", 
+                  "/bathroombandit.mp3",
+                  "/bathroomintruder.mp3", 
+                  "/mommycleanmypoop.mp3" };
 
 LooMotion looMotion;
 const int motionSensorPin = 27; //pin 27 for motion sensor
@@ -29,7 +41,7 @@ bool needToNotify = 0;
 
 unsigned long lastTrigger = 0;
 boolean startTimer = false;
-#define MOTION_TIMEOUT_SECONDS 30
+#define MOTION_TIMEOUT_SECONDS 60
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -146,17 +158,20 @@ const char index_html[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 void notifyClients() {
+  
   //Serial.print("Notifying all clients: ");
   //Serial.println(looMotion.toJSON());
+  
+  String r = String(random(sizeof(alertMP3)/sizeof(alertMP3[0])));
+  String mp3URL = thisURL+r+".mp3";
+  
   if (looMotion.getMotionState() == 1) {
     //motion was detected
-    if (ghn.notify("Bathroom Bandit!") != true) {
-      Serial.println(ghn.getLastError());
-    }
+    //googleHome.notifyTTS("Bathroom Intruder");
+    //googleHome.notifyMP3("http://192.168.1.35/3.mp3");
+    googleHome.notifyMP3(mp3URL.c_str());
   } else {
-    if (ghn.notify("Bathroom now safe") != true) {
-      Serial.println(ghn.getLastError());
-    }
+    //googleHome.notifyTTS("Bathroom now safe");
   }
   ws.textAll(looMotion.toJSON());
   needToNotify = 0;
@@ -233,8 +248,16 @@ void setup(){
     Serial.println("Connecting to WiFi..");
   }
 
-  // Print ESP Local IP Address
-  Serial.println(WiFi.localIP());
+  Serial.print("ESP32 url - ");
+  thisURL += WiFi.localIP().toString().c_str();
+  thisURL += "/";
+  Serial.println(thisURL);
+
+  // Initialize SPIFFS
+  if(!SPIFFS.begin(true)){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
 
   initWebSocket();
 
@@ -242,20 +265,21 @@ void setup(){
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", index_html);
   });
+  server.on("/0.mp3", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, alertMP3[0], "audio/mpeg");
+  });
+  server.on("/1.mp3", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, alertMP3[1], "audio/mpeg");
+  });
+  server.on("/2.mp3", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, alertMP3[2], "audio/mpeg");
+  });
+  server.on("/3.mp3", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, alertMP3[3], "audio/mpeg");
+  });
 
   // Start server
   server.begin();
-
-  Serial.println("connecting to Google Home...");
-  if (ghn.device(googleHomeName, "en") != true) {
-    Serial.println(ghn.getLastError());
-    return;
-  }
-  Serial.print("found Google Home(");
-  Serial.print(ghn.getIPAddress());
-  Serial.print(":");
-  Serial.print(ghn.getPort());
-  Serial.println(")");
   
   // PIR Motion Sensor mode INPUT_PULLUP
   pinMode(motionSensorPin, INPUT_PULLUP);
@@ -264,6 +288,10 @@ void setup(){
 
   /** push button*/
   pushButton.init(pushButtonPin);
+
+  /** google home*/
+  googleHome.init(googleHomeName);
+
 
   //init time server
   configTime(0, 0, ntpServer);

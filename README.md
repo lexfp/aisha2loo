@@ -10,8 +10,8 @@ The code herein written by the Author is released under the terms of the unlicen
 2) Motion sensor (PIR or microwave) - wired to 5v, ground, and pin 27
 
 # Optional:
-1) Push button - used for development/testing to simulate triggering motion detection
-2) Google home - this will broadcast to google home as well (there are limits to the # of api calls though)
+1) Push button - used for development/testing to simulate triggering motion detection (can use pin 0 if you want to use the boot button)
+2) Google home - this will broadcast to google home as well (there are limits to the # of api calls though). Alternatively, you can create your own mp3s using a free tts service (https://ttsmp3.com/) and then upload them to the esp32's SPIFFS file system (google for some tutorials).
 3) web browser - this is the other way to get notified when motion is detected (uses websockets)
 
 # Description
