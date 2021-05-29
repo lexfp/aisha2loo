@@ -1,5 +1,9 @@
 #include "GoogleHome.h"
 
+/** The code herein written by the Author is released under the terms of the unlicense. https://unlicense.org/
+ * @author https://github.com/lexfp 
+ */
+
 void GoogleHome::init(char googleHomeName[]) {
   Serial.println("connecting to Google Home...");
   if (ghn.device(googleHomeName, "en") != true) {
